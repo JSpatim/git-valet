@@ -132,6 +132,7 @@ pub fn init(remote: &str, files: &[String]) -> Result<()> {
 
     if !existing_files.is_empty() {
         let add_args: Vec<&str> = std::iter::once("add")
+            .chain(std::iter::once("-f"))
             .chain(existing_files.iter().map(|f| f.as_str()))
             .collect();
         sgit(&add_args, &cfg)?;
@@ -178,6 +179,12 @@ pub fn status() -> Result<()> {
     }
     println!();
 
+    let head_check = sgit(&["rev-parse", "HEAD"], &cfg)?;
+    if !head_check.status.success() {
+        println!("{}", "Aside repo has no commits yet — run `git aside sync` to create the initial commit.".yellow());
+        return Ok(());
+    }
+
     let out = sgit(&["status", "--short"], &cfg)?;
     let stdout = String::from_utf8_lossy(&out.stdout);
     if stdout.trim().is_empty() {
@@ -205,12 +212,17 @@ pub fn sync(message: &str) -> Result<()> {
         return Ok(());
     }
 
-    let mut add_args = vec!["add"];
+    let mut add_args = vec!["add", "-f"];
     add_args.extend(existing.iter());
     sgit(&add_args, &cfg)?;
 
+    // On an empty repo (no commits), status --porcelain shows nothing.
+    // Detect this case by checking if HEAD exists.
+    let head_check = sgit(&["rev-parse", "HEAD"], &cfg)?;
+    let is_empty_repo = !head_check.status.success();
+
     let status_out = sgit(&["status", "--porcelain"], &cfg)?;
-    let has_changes = !String::from_utf8_lossy(&status_out.stdout).trim().is_empty();
+    let has_changes = is_empty_repo || !String::from_utf8_lossy(&status_out.stdout).trim().is_empty();
 
     if has_changes {
         let commit_out = sgit(&["commit", "-m", message], &cfg)?;
@@ -286,7 +298,7 @@ pub fn add_files(files: &[String]) -> Result<()> {
     update_gitignore(&work_tree, files)?;
 
     let file_refs: Vec<&str> = files.iter().map(|f| f.as_str()).collect();
-    let mut add_args = vec!["add"];
+    let mut add_args = vec!["add", "-f"];
     add_args.extend(file_refs.iter());
     sgit(&add_args, &cfg)?;
 
