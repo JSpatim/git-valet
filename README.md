@@ -1,18 +1,20 @@
 # git-aside
 
-Version sensitive files (CLAUDE.md, .claude/, .env, secrets...) in a **separate private repo**, **transparently** alongside your usual git commands.
+Version specific files in a **separate private repo**, **transparently** alongside your usual git commands.
 
 ## The problem
 
+Some files need to be versioned but don't belong in your main repo — private configs, secrets, AI prompts, local tooling, notes, anything you want tracked but kept separate.
+
 ```
 my-project/           <- public repo
-├── .gitignore        <- ignores CLAUDE.md, .claude/
-├── CLAUDE.md         <- you want this versioned ELSEWHERE
-├── .claude/          <- same
+├── .gitignore        <- ignores .env, notes/
+├── .env              <- you want this versioned ELSEWHERE
+├── notes/            <- same
 └── src/
 ```
 
-You want CLAUDE.md and .claude/ versioned in a private repo, without changing your git workflow at all.
+You want these files versioned in a private repo, without changing your git workflow at all.
 
 ## Installation
 
@@ -39,12 +41,12 @@ Git automatically recognizes `git aside` as a subcommand (`git-<name>` conventio
 ```bash
 cd my-project
 
-git aside init git@github.com:you/my-project-private.git CLAUDE.md .claude/
+git aside init git@github.com:you/my-project-private.git .env config/local.toml notes/
 ```
 
 What this does:
 - Creates a bare repo in `~/.git-asides/<id>/repo.git`
-- Adds `CLAUDE.md` and `.claude/` to the main repo's `.gitignore`
+- Adds the tracked files to the main repo's `.gitignore`
 - Installs git hooks (pre-commit, pre-push, post-merge, post-checkout)
 - Makes an initial commit + push if the files already exist
 
@@ -65,7 +67,7 @@ git aside status          # show aside repo status
 git aside sync            # manual add + commit + push
 git aside push            # push only
 git aside pull            # pull only
-git aside add .env        # add a new file to the aside
+git aside add secrets.yml # add a new file to the aside
 git aside deinit          # remove git-aside from this project
 ```
 
@@ -73,11 +75,11 @@ git aside deinit          # remove git-aside from this project
 
 ```bash
 # 1. Clone your main repo
-git clone git@github.com:JSpatim/my-project.git
+git clone git@github.com:you/my-project.git
 cd my-project
 
 # 2. Re-initialize git-aside for this project
-git aside init git@github.com:JSpatim/my-project-private.git CLAUDE.md .claude/
+git aside init git@github.com:you/my-project-private.git .env config/local.toml notes/
 ```
 
 ## Architecture
