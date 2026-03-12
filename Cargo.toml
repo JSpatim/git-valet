@@ -1,0 +1,26 @@
+[package]
+name = "git-aside"
+version = "0.1.0"
+edition = "2021"
+description = "Version specific files in a separate private repo transparently alongside git repos"
+license = "MIT"
+repository = "https://github.com/JSpatim/git-aside"
+keywords = ["git", "private", "secrets", "worktree"]
+categories = ["command-line-utilities", "development-tools"]
+
+[[bin]]
+name = "git-aside"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+dirs = "5"
+anyhow = "1"
+colored = "2"
+sha2 = "0.10"
+hex = "0.4"
+
+[dev-dependencies]
+tempfile = "3"
