@@ -154,7 +154,24 @@ pub fn init(remote: &str, files: &[String]) -> Result<()> {
             }
         }
     } else {
-        println!("{} No tracked files found locally yet", "i".blue());
+        // No local files — try to pull from remote (fresh clone scenario)
+        let fetch_out = sgit(&["fetch", "origin", &cfg.branch], &cfg)?;
+        if fetch_out.status.success() {
+            let checkout_out = sgit(
+                &["checkout", &format!("origin/{}", cfg.branch), "--", "."],
+                &cfg,
+            )?;
+            if checkout_out.status.success() {
+                // Set up local branch tracking
+                sgit(&["branch", &cfg.branch, &format!("origin/{}", cfg.branch)], &cfg)?;
+                sgit(&["symbolic-ref", "HEAD", &format!("refs/heads/{}", cfg.branch)], &cfg)?;
+                println!("{} Pulled existing files from remote", "->".cyan());
+            } else {
+                println!("{} Remote exists but checkout failed", "!".yellow());
+            }
+        } else {
+            println!("{} No tracked files found locally and remote is empty", "i".blue());
+        }
     }
 
     println!("\n{}", "Done! Aside repo initialized.".green().bold());
